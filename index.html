@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Master Implementation Timeline</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f8f9fa;
+    --surface: #ffffff;
+    --surface2: #f3f4f6;
+    --surface3: #e9ebee;
+    --border: #dde1e7;
+    --border2: #c4c9d4;
+    --text: #1a1d23;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --accent: #2563eb;
+
+    --phase-dev:      #374151; --phase-dev-light: #f0f1f3;
+    --phase-config:   #4b5563; --phase-config-light: #f1f2f4;
+    --phase-sit:      #1e3a5f; --phase-sit-light: #eef3fa;
+    --phase-uat:      #7c2d12; --phase-uat-light: #fef4f0;
+    --phase-bal:      #14532d; --phase-bal-light: #f0faf4;
+    --phase-cut:      #78350f; --phase-cut-light: #fef9ee;
+    --phase-golive:   #1e3a5f; --phase-golive-light: #eef3fa;
+
+    --st-sched:   #1d4ed8; --st-sched-bg:   #eff6ff;
+    --st-ready:   #15803d; --st-ready-bg:   #f0fdf4;
+    --st-review:  #b45309; --st-review-bg:  #fffbeb;
+    --st-risk:    #dc2626; --st-risk-bg:    #fef2f2;
+    --st-tbd:     #6b7280; --st-tbd-bg:     #f9fafb;
+    --st-mile:    #6d28d9; --st-mile-bg:    #f5f3ff;
+
+    --flag-risk:    #dc2626;    --flag-risk-bg:    #fef2f2;
+    --flag-added:   #15803d;   --flag-added-bg:   #f0fdf4;
+    --flag-revised: #1d4ed8;   --flag-revised-bg: #eff6ff;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: #ffffff;
+    border-bottom: 2px solid var(--border);
+    padding: 1.5rem 2rem 1.25rem;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .header-inner { max-width: 1400px; margin: 0 auto; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+  .header-title { font-size: 1.2rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .header-title span { color: var(--accent); }
+  .header-sub { font-size: 0.73rem; color: var(--text3); margin-top: 0.2rem; font-family: 'JetBrains Mono', monospace; }
+  .golive-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #f0fdf4; border: 1.5px solid #15803d;
+    color: #15803d; font-size: 0.72rem; font-weight: 700;
+    padding: 0.4rem 0.9rem; border-radius: 20px;
+    letter-spacing: 0.03em; white-space: nowrap;
+  }
+  .golive-badge::before { content: "●"; font-size: 0.55rem; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── STATS BAR ── */
+  .stats-bar { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.45rem 0.9rem;
+    display: flex; align-items: center; gap: 0.45rem; font-size: 0.78rem;
+  }
+  .stat-num { font-size: 1.05rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+  .stat-label { color: var(--text2); }
+  .stat.risk .stat-num  { color: #dc2626; }
+  .stat.mile .stat-num  { color: #6d28d9; }
+  .stat.total .stat-num { color: var(--accent); }
+
+  /* ── FILTERS ── */
+  .filters { display: flex; gap: 0.45rem; margin-top: 0.85rem; flex-wrap: wrap; align-items: center; }
+  .filters label { font-size: 0.72rem; color: var(--text3); margin-right: 0.2rem; font-weight: 600; }
+  .filter-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); font-size: 0.72rem; font-weight: 500;
+    padding: 0.28rem 0.7rem; border-radius: 20px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); background: #eff6ff; }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: #eff6ff; font-weight: 600; }
+  .filter-btn.risk-btn { color: #dc2626; border-color: #fca5a5; background: #fef2f2; }
+  .filter-btn.risk-btn:hover, .filter-btn.risk-btn.active { background: #fee2e2; border-color: #dc2626; }
+  .search-box {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-size: 0.78rem; font-family: 'Inter', sans-serif;
+    padding: 0.28rem 0.8rem; border-radius: 20px; outline: none;
+    width: 210px; transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px #dbeafe; }
+  .search-box::placeholder { color: var(--text3); }
+
+  /* ── MAIN ── */
+  .main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
+
+  /* ── PHASE SECTION ── */
+  .phase-section {
+    margin-bottom: 0.85rem; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .phase-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 1rem; cursor: pointer; user-select: none;
+    transition: filter 0.15s;
+  }
+  .phase-header:hover { filter: brightness(0.97); }
+  .phase-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .phase-name { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+  .phase-count { font-size: 0.7rem; margin-left: auto; font-family: 'JetBrains Mono', monospace; opacity: 0.65; }
+  .phase-chevron { font-size: 0.65rem; transition: transform 0.2s; opacity: 0.5; }
+  .phase-section.collapsed .phase-chevron { transform: rotate(-90deg); }
+  .phase-section.collapsed .phase-body { display: none; }
+
+  /* ── TABLE ── */
+  .phase-body { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width: 900px; }
+  thead th {
+    background: #f9fafb; color: var(--text3);
+    font-size: 0.67rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th:nth-child(1) { width: 60px; }
+  thead th:nth-child(3) { width: 105px; }
+  thead th:nth-child(4) { width: 100px; }
+  thead th:nth-child(5) { width: 100px; }
+  thead th:nth-child(4) { width: 120px; }
+  thead th:nth-child(6) { width: 125px; }
+  thead th:nth-child(7) { width: 88px; }
+  thead th:nth-child(8) { width: 100px; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f0f4ff !important; }
+  tbody tr.hidden-row { display: none; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  tbody tr:nth-child(odd)  { background: #ffffff; }
+
+  td { padding: 0.55rem 0.75rem; vertical-align: top; }
+  td.ref   { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text3); white-space: nowrap; }
+  td.task  { font-weight: 500; color: var(--text); }
+  td.task.is-milestone { font-weight: 700; }
+  td.date  { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text2); white-space: nowrap; }
+  td.month { font-size: 0.7rem; color: var(--text3); white-space: nowrap; font-family: 'JetBrains Mono', monospace; }
+  td.owner { font-size: 0.75rem; color: var(--text2); }
+  td.pred  { font-family: 'JetBrains Mono', monospace; font-size: 0.69rem; color: var(--text3); }
+  td.notes { font-size: 0.74rem; color: var(--text2); line-height: 1.45; }
+
+  .status-badge {
+    display: inline-block; font-size: 0.67rem; font-weight: 600;
+    padding: 0.2rem 0.55rem; border-radius: 20px; white-space: nowrap; letter-spacing: 0.02em;
+  }
+  .pm-flag {
+    display: inline-block; font-size: 0.67rem; font-weight: 600;
+    padding: 0.18rem 0.5rem; border-radius: 4px; white-space: nowrap;
+  }
+  .flag-risk    { background: var(--flag-risk-bg);    color: var(--flag-risk); }
+  .flag-added   { background: var(--flag-added-bg);   color: var(--flag-added); }
+  .flag-revised { background: var(--flag-revised-bg); color: var(--flag-revised); }
+
+  .milestone-row td.task::before {
+    content: "◆ "; font-size: 0.58rem; color: #6d28d9; vertical-align: middle;
+  }
+
+  /* ── RISK REGISTER ── */
+  .risk-section {
+    margin-top: 1.5rem; border: 1.5px solid #fca5a5; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(220,38,38,0.08);
+  }
+  .risk-header {
+    background: #fff5f5; padding: 0.7rem 1rem;
+    display: flex; align-items: center; gap: 0.6rem; cursor: pointer;
+    border-bottom: 1px solid #fecaca;
+  }
+  .risk-header-title { font-size: 0.82rem; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.05em; }
+  .risk-header-sub { font-size: 0.71rem; color: #9ca3af; margin-left: auto; }
+  .risk-body { overflow-x: auto; background: #fff; }
+  .risk-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 700px; }
+  .risk-table thead th {
+    background: #fef2f2; color: #9ca3af; font-size: 0.67rem;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #fecaca;
+  }
+  .risk-table tbody tr { border-bottom: 1px solid #fef2f2; transition: background 0.1s; }
+  .risk-table tbody tr:nth-child(even) { background: #fff5f5; }
+  .risk-table tbody tr:hover { background: #fee2e2 !important; }
+  .risk-table td { padding: 0.6rem 0.75rem; vertical-align: top; color: var(--text2); line-height: 1.4; }
+  .risk-id { font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--text3); }
+  .priority-high { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; font-size: 0.67rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 20px; }
+  .priority-med  { background: #fffbeb; color: #b45309; border: 1px solid #fcd34d; font-size: 0.67rem; font-weight: 700; padding: 0.18rem 0.5rem; border-radius: 20px; }
+  .risk-area { font-weight: 600; color: var(--text); }
+
+  /* ── LEGEND ── */
+  .legend-bar {
+    margin-top: 1.5rem; padding: 0.9rem 1.25rem;
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .legend-label { font-size: 0.68rem; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.71rem; color: var(--text2); }
+
+
+  #phase-dev th:nth-child(4),
+  #phase-dev td:nth-child(4),
+  #phase-dev th:nth-child(5),
+  #phase-dev td:nth-child(5) {
+    display: none;
+  }
+
+  #phase-config th:nth-child(3), #phase-config td:nth-child(3),
+  #phase-sit th:nth-child(3),    #phase-sit td:nth-child(3),
+  #phase-uat th:nth-child(3),    #phase-uat td:nth-child(3),
+  #phase-bal th:nth-child(3),    #phase-bal td:nth-child(3),
+  #phase-cut th:nth-child(3),    #phase-cut td:nth-child(3),
+  #phase-golive th:nth-child(3), #phase-golive td:nth-child(3) {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .main { padding: 1rem; }
+    .site-header { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="header-title">Project <span>Master Implementation</span> Timeline</div>
+        <div class="header-sub">Senior PM Reviewed &nbsp;·&nbsp; 7 Phases &nbsp;·&nbsp; Last updated: Jun 2026</div>
+      </div>
+      <div class="golive-badge">TARGET GO LIVE &nbsp; 05 Oct 2026</div>
+    </div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="filters">
+      <label>Filter:</label>
+      <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+      <button class="filter-btn" onclick="filterStatus('In Progress', this)">In Progress</button>
+      <button class="filter-btn" onclick="filterStatus('Milestone', this)">Milestones</button>
+      <button class="filter-btn" onclick="filterStatus('At Risk', this)">At Risk</button>
+      <button class="filter-btn" onclick="filterStatus('Under review', this)">Under Review</button>
+      <button class="filter-btn" onclick="filterStatus('Ready to use', this)">Ready</button>
+      <button class="filter-btn" onclick="filterStatus('TBD', this)">TBD</button>
+      <button class="filter-btn risk-btn" onclick="filterStatus('⚠ RISK', this)">⚠ Risks Only</button>
+      <input class="search-box" type="text" placeholder="🔍  Search tasks…" oninput="searchTasks(this.value)" />
+    </div>
+  </div>
+</header>
+
+<main class="main" id="mainContent"></main>
+
+<script>
+const PHASES = [
+  { id:'dev',    label:'Dev Completion',     color:'#374151', bg:'#f0f1f3' },
+  { id:'config', label:'Config & Migration', color:'#4b5563', bg:'#f1f2f4' },
+  { id:'sit',    label:'SIT',                color:'#1e3a5f', bg:'#eef3fa' },
+  { id:'uat',    label:'UAT & Training',     color:'#7c2d12', bg:'#fef4f0' },
+  { id:'bal',    label:'Balances Migration', color:'#14532d', bg:'#f0faf4' },
+  { id:'cut',    label:'Cutover & Blackout', color:'#78350f', bg:'#fef9ee' },
+  { id:'golive', label:'Go Live & Support',  color:'#1e3a5f', bg:'#eef3fa' },
+];
+
+const STATUS_STYLE = {
+  'In Progress':  { bg:'#eff6ff', fg:'#1d4ed8' },
+  'Ready to use': { bg:'#f0fdf4', fg:'#15803d' },
+  'Under review': { bg:'#fffbeb', fg:'#b45309' },
+  'At Risk':      { bg:'#fef2f2', fg:'#dc2626' },
+  'TBD':          { bg:'#f9fafb', fg:'#6b7280' },
+  'Milestone':    { bg:'#f5f3ff', fg:'#6d28d9' },
+  'Complete':     { bg:'#f0fdf4', fg:'#15803d' },
+};
+
+const FLAG_CLASS = { '⚠ RISK':'flag-risk', '✓ ADDED':'flag-added', '→ REVISED':'flag-revised' };
+
+const DATA = {
+  dev: [
+    ['1.1','SIS','22/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.2','Student Attendance','22/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.3','HR','22/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.4','Petty Cash','22/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.5','Fee','25/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.6','GL Accounting','25/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.7','Curriculum & Lesson Plan','30/06/2026','In Progress',"Jun '26",'Dev Team','—','',''],
+    ['1.8','TEF','Ready','Ready to use','Ready','Dev Team','—','','No dev required — available immediately'],
+    ['1.9','Student Support','Ready','Ready to use','Ready','Dev Team','—','','No dev required — available immediately'],
+    ['1.10','Library','12/07/2026','Under review',"Jul '26",'Dev Team','—','⚠ RISK','BT to share business blueprint with BSS MENA — blueprint must be approved before dev can start'],
+    ['1.11','Payroll','15/07/2026','In Progress',"Jul '26",'Dev Team','—','',''],
+    ['1.12','Fixed Assets','20/07/2026','Under review',"Jul '26",'Dev Team','—','⚠ RISK','Requirements under review — date at risk if review not concluded by w/c 29 Jun'],
+    ['1.13','Mobile App','31/07/2026','In Progress',"Jul '26",'Dev Team','—','',''],
+    ['1.14','Transportation','TBD','At Risk','TBD','Dev Team','—','⚠ RISK','Blueprint under review with BSS MENA — ESCALATE: no date agreed. Risk to UAT schedule if not resolved by 30 Jun'],
+    ['1.15','SMS Module','TBD','At Risk','TBD','Dev Team','—','⚠ RISK','Blueprint under review with BSS MENA — ESCALATE: no date agreed. Risk to UAT schedule if not resolved by 30 Jun'],
+    ['1.16','Gradebook','31/08/2026','At Risk',"Aug '26",'Dev Team','—','⚠ RISK','CRITICAL: Completion on 31 Aug pushes UAT to Sep and Go Live to Oct minimum. Recommend expediting or descoping to Phase 2'],
+  ],
+  config: [
+    ['2.1','Configuration of SIS','23/06/2026','In Progress',"Jun '26",'Functional Team','1.1','→ REVISED','Starts day after SIS dev sign-off','22/06/2026','23/06/2026'],
+    ['2.2','Configuration of Fee & Fee Packages (Session 2026-2027)','25/06/2026','In Progress',"Jun '26",'Functional Team','1.5','→ REVISED','Aligned to Fee module completion','25/06/2026','25/06/2026'],
+    ['2.3','Configuration of HR and Payroll','16/07/2026','In Progress',"Jul '26",'Functional Team','1.3, 1.11','→ REVISED','Starts after both HR (22 Jun) and Payroll (15 Jul) dev complete','16/07/2026','23/07/2026'],
+    ['2.4','Configuration of Curriculum, Timetable & Related Modules','01/07/2026','In Progress',"Jul '26",'Functional Team','1.7','→ REVISED','Starts after Curriculum dev complete 30 Jun','01/07/2026','07/07/2026'],
+    ['2.5','Configuration of GL Accounting & Petty Cash','26/06/2026','In Progress',"Jun '26",'Functional Team','1.4, 1.6','→ REVISED','Follows GL Accounting and Petty Cash dev completion','26/06/2026','26/06/2026'],
+    ['2.6','Migration of Student Master Data','07/07/2026','In Progress',"Jul '26",'Data Team','2.1','→ REVISED','Allow ~2 weeks post SIS config for data cleanse and mapping','24/06/2026','07/07/2026'],
+    ['2.7','Migration of HR Master Data','23/07/2026','In Progress',"Jul '26",'Data Team','2.3','→ REVISED','Allow ~1 week post HR/Payroll config','23/07/2026','30/07/2026'],
+    ['2.8','Migration of Receivables & Petty Cash Account','10/07/2026','In Progress',"Jul '26",'Data Team','2.5','→ REVISED','Allow ~2 weeks post GL/Petty Cash config','27/06/2026','10/07/2026'],
+    ['2.9','Migration of Inventory Master Data','17/07/2026','In Progress',"Jul '26",'Data Team','2.4','→ REVISED','Allow ~2 weeks post module config','08/07/2026','17/07/2026'],
+    ['2.10','Data Migration Validation & Sign-off','25/07/2026','Milestone',"Jul '26",'PM / Client','2.6–2.9','✓ ADDED','All migration streams must be validated before SIT entry — client sign-off required','25/07/2026','25/07/2026'],
+  ],
+  sit: [
+    ['3.1','SIT Environment Setup & Test Data Load','28/07/2026','Milestone',"Jul '26",'Tech Lead','2.10','✓ ADDED','Dedicated SIT environment required — confirm infra readiness','28/07/2026','28/07/2026'],
+    ['3.2','SIT Execution — Core Modules','04/08/2026','In Progress',"Aug '26",'QA Team','3.1','✓ ADDED','SIS, Attendance, Fee, GL, HR, Payroll, Fixed Assets, Petty Cash','28/07/2026','04/08/2026'],
+    ['3.3','SIT Execution — Supporting Modules','11/08/2026','In Progress',"Aug '26",'QA Team','3.2','✓ ADDED','Library, Mobile App, Curriculum, Transportation, SMS (if available)','04/08/2026','11/08/2026'],
+    ['3.4','SIT Defect Resolution & Retest','18/08/2026','In Progress',"Aug '26",'Dev + QA Team','3.3','✓ ADDED','Allow 1 week for P1/P2 defect fixes — no open P1s permitted at SIT exit','11/08/2026','18/08/2026'],
+    ['3.5','SIT Sign-off','20/08/2026','Milestone',"Aug '26",'PM / Client','3.4','✓ ADDED','Formal SIT exit criteria must be met before UAT can commence','20/08/2026','20/08/2026'],
+  ],
+  uat: [
+    ['4.1','UAT Environment Setup & User Access Configuration','21/08/2026','Milestone',"Aug '26",'Tech Lead','3.5','✓ ADDED','UAT environment must mirror production — user credentials set up in advance','21/08/2026','21/08/2026'],
+    ['4.2','Complete Overview & Demo to BSS MENA RO POC','25/08/2026','In Progress',"Aug '26",'PM','4.1','→ REVISED','Kick-off session — all key stakeholders to attend','25/08/2026','25/08/2026'],
+    ['4.3','UAT & Training — BSS Sharjah','26/08/2026','In Progress',"Aug '26",'Functional Team','4.2','→ REVISED','Schedule: 2 days per location','26/08/2026','27/08/2026'],
+    ['4.4','UAT & Training — BSS Newlands Dubai','28/08/2026','In Progress',"Aug '26",'Functional Team','4.3','→ REVISED','','28/08/2026','29/08/2026'],
+    ['4.5','UAT & Training — BSS Al Ain Dubai','01/09/2026','In Progress',"Sep '26",'Functional Team','4.4','→ REVISED','','01/09/2026','02/09/2026'],
+    ['4.6','UAT & Training — BSS MENA Academics & HR','03/09/2026','In Progress',"Sep '26",'Functional Team','4.5','→ REVISED','Critical: HR and academic staff must be trained before Go Live','03/09/2026','04/09/2026'],
+    ['4.7','UAT & Training — BSS Oman','07/09/2026','In Progress',"Sep '26",'Functional Team','4.6','→ REVISED','Remote session if travel not feasible — confirm logistics','07/09/2026','08/09/2026'],
+    ['4.8','UAT Defect Triage & Resolution','10/09/2026','In Progress',"Sep '26",'Dev + PM','4.7','✓ ADDED','Triage all UAT-raised defects — P1/P2 must be resolved before sign-off','09/09/2026','10/09/2026'],
+    ['4.9','Obtain UAT Review & Formal Sign-off','14/09/2026','Milestone',"Sep '26",'PM / Client','4.8','→ REVISED','Written sign-off from client required — gate to Balances Migration & Blackout','14/09/2026','14/09/2026'],
+  ],
+  bal: [
+    ['5.1','Extract & Validate Student Receivable balances (as at 30 Jun 2026)','15/09/2026','In Progress',"Sep '26",'Data Team','4.9','→ REVISED','Data snapshot date is 30 Jun; migration execution follows UAT sign-off','15/09/2026','16/09/2026'],
+    ['5.2','Extract & Validate Employee balances (as at 30 Jun 2026)','15/09/2026','In Progress',"Sep '26",'Data Team','4.9','→ REVISED','Parallel run with 5.1','15/09/2026','16/09/2026'],
+    ['5.3','Extract & Validate Petty Cash G/L balances (as at 30 Jun 2026)','15/09/2026','In Progress',"Sep '26",'Data Team','4.9','→ REVISED','Parallel run with 5.1','15/09/2026','16/09/2026'],
+    ['5.4','Load Opening Balances to Production-like Environment','17/09/2026','In Progress',"Sep '26",'Data Team','5.1–5.3','✓ ADDED','Dry-run load — not production. Validates migration scripts before cutover','17/09/2026','17/09/2026'],
+    ['5.5','Balance Reconciliation & Client Review','19/09/2026','In Progress',"Sep '26",'Finance / PM','5.4','✓ ADDED','Client finance team must reconcile migrated balances against source','18/09/2026','19/09/2026'],
+    ['5.6','Balance Migration Sign-off','22/09/2026','Milestone',"Sep '26",'PM / Client','5.5','→ REVISED','Written sign-off required — gate to Cutover','22/09/2026','22/09/2026'],
+  ],
+  cut: [
+    ['6.1','Cutover Plan Finalised & Approved','22/09/2026','Milestone',"Sep '26",'PM','5.6','✓ ADDED','Document: cutover runbook, rollback plan, go/no-go criteria, RACI','22/09/2026','22/09/2026'],
+    ['6.2','Cutover Rehearsal (Dry Run)','24/09/2026','Milestone',"Sep '26",'Tech Lead + PM','6.1','✓ ADDED','Full end-to-end rehearsal in staging — time every step. Mandatory before live cutover','24/09/2026','24/09/2026'],
+    ['6.3','Finalise User Access, Roles & Permissions','25/09/2026','In Progress',"Sep '26",'Tech Lead','6.1','→ REVISED','All production user accounts, roles and security profiles must be ready pre-cutover','25/09/2026','25/09/2026'],
+    ['6.4','Finalise Cutover Checklist & Go/No-Go Sign-off','26/09/2026','Milestone',"Sep '26",'PM / Client','6.2, 6.3','→ REVISED','Formal go/no-go meeting — all workstream leads must attend','26/09/2026','26/09/2026'],
+    ['6.5','SYSTEM FREEZE: Halt new development & change requests','28/09/2026','Milestone',"Sep '26",'PM','6.4','→ REVISED','No code changes, configuration changes or master data updates after this point','28/09/2026','28/09/2026'],
+    ['6.6','Lock Cutover Date & Notify all Stakeholders','28/09/2026','In Progress',"Sep '26",'PM','6.5','→ REVISED','Formally communicate Go Live date to all schools, staff and stakeholders','28/09/2026','28/09/2026'],
+    ['6.7','Final Data Migration to Production','01/10/2026','Milestone',"Oct '26",'Data Team','6.5','→ REVISED','Execute final production migration using signed-off scripts — include balances','01/10/2026','01/10/2026'],
+    ['6.8','Final Reconciliation & Data Validation in Production','02/10/2026','In Progress',"Oct '26",'Data + Finance','6.7','✓ ADDED','Verify all counts, totals and spot-checks against source system','02/10/2026','02/10/2026'],
+    ['6.9','Conduct Go-Live Readiness Review','03/10/2026','Milestone',"Oct '26",'PM / Client','6.8','→ REVISED','Final checkpoint: all systems go, support teams briefed, helpdesk ready','03/10/2026','03/10/2026'],
+  ],
+  golive: [
+    ['7.1','GO LIVE — Enable Production Environment','05/10/2026','Milestone',"Oct '26",'Tech Lead + PM','6.9','→ REVISED','Target Go Live date — subject to go/no-go approval. Switch off Paradigm simultaneously','05/10/2026','05/10/2026'],
+    ['7.2','Switch off Legacy System (Paradigm)','05/10/2026','Milestone',"Oct '26",'Tech Lead','7.1','→ REVISED','Decommission Paradigm access — retain read-only for 30 days for reference','05/10/2026','05/10/2026'],
+    ['7.3','Hypercare Support — Week 1 (On-site)','05/10/2026','In Progress',"Oct '26",'Functional + Dev','7.1','✓ ADDED','All functional and dev leads on-site or on-call for first week','05/10/2026','11/10/2026'],
+    ['7.4','Hypercare Support — Week 2 & 3 (Remote)','12/10/2026','In Progress',"Oct '26",'Functional Team','7.3','✓ ADDED','Daily check-in calls, issue triage, priority fixes','12/10/2026','24/10/2026'],
+    ['7.5','Monitor System Performance & Stability','05/10/2026','In Progress',"Oct '26",'Tech Lead','7.1','→ REVISED','Daily monitoring for first 4 weeks: performance, errors, data integrity','05/10/2026','31/10/2026'],
+    ['7.6','Post Go-Live Issue Log Review','19/10/2026','In Progress',"Oct '26",'PM','7.4','✓ ADDED','Review all issues raised during hypercare — classify as bugs vs change requests','19/10/2026','19/10/2026'],
+    ['7.7','Project Closure & Final Sign-off','31/10/2026','Milestone',"Oct '26",'PM / Client','7.6','→ REVISED','Lessons learned, handover to BAU support, closure report, final invoice','31/10/2026','31/10/2026'],
+    ['7.8','Post Go-Live Support Ends / BAU Handover','31/10/2026','Milestone',"Oct '26",'PM','7.7','✓ ADDED','Formal transition to Business As Usual support model','31/10/2026','31/10/2026'],
+  ],
+};
+
+const RISKS = [
+  ['R1','Transportation & SMS Module','No blueprint / date agreed','HIGH','Escalate to BSS MENA immediately. Resolve by 30 Jun or descope to Phase 2.'],
+  ['R2','Gradebook (31 Aug dev completion)','Pushes Go Live to Nov at earliest','HIGH','Consider expediting dev team, parallel-running UAT, or releasing Gradebook post-Go Live as Phase 2.'],
+  ['R3','Library blueprint pending','Dev cannot start without blueprint','MED','BT to submit blueprint to BSS MENA by 19 Jun. Escalate if not received.'],
+  ['R4','Fixed Assets requirements under review','Date at risk','MED','Requirements must be finalised by 29 Jun to protect 20 Jul dev completion date.'],
+  ['R5','No SIT phase in original plan','Integration issues would surface in UAT','HIGH','SIT phase added (Phase 3). Confirm QA resource availability from 28 Jul.'],
+  ['R6','Balance migration dates were incorrect','Original plan showed 30 Jun — pre-config','HIGH',"Corrected: balance migration executes post-UAT sign-off (Sep). 30 Jun is the snapshot date only."],
+  ['R7','Go Live date dependency on Gradebook','If Gradebook not expedited, Go Live slips','HIGH','Recommend Go Live without Gradebook (Phase 2 release). Decision needed from steering committee.'],
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function statusBadge(s) {
+  const st = STATUS_STYLE[s] || {bg:'#f9fafb',fg:'#6b7280'};
+  return `<span class="status-badge" style="background:${st.bg};color:${st.fg};border:1px solid ${st.fg}30">${s}</span>`;
+}
+function pmFlag(f) {
+  if (!f) return '';
+  const cls = FLAG_CLASS[f] || '';
+  return `<span class="pm-flag ${cls}">${f}</span>`;
+}
+
+function buildStats() {
+  let total=0, milestones=0, risks=0, added=0;
+  Object.values(DATA).forEach(rows => rows.forEach(r => {
+    total++; if(r[3]==='Milestone') milestones++; if(r[3]==='At Risk') risks++; if(r[7]==='✓ ADDED') added++;
+  }));
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat total"><span class="stat-num">${total}</span><span class="stat-label">total tasks</span></div>
+    <div class="stat mile"><span class="stat-num">${milestones}</span><span class="stat-label">milestones</span></div>
+    <div class="stat risk"><span class="stat-num">${risks}</span><span class="stat-label">at risk</span></div>`;
+}
+
+function buildPhases() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  PHASES.forEach(phase => {
+    const rows = DATA[phase.id] || [];
+    const sec = document.createElement('div');
+    sec.className = 'phase-section'; sec.id = 'phase-' + phase.id;
+    sec.style.borderColor = phase.color + '30';
+    sec.innerHTML = `
+      <div class="phase-header" style="background:${phase.bg}" onclick="togglePhase('${phase.id}')">
+        <div class="phase-dot" style="background:${phase.color}"></div>
+        <span class="phase-name" style="color:${phase.color}">${phase.label}</span>
+        <span class="phase-count" style="color:${phase.color}">${rows.length} tasks</span>
+        <span class="phase-chevron" style="color:${phase.color}">▼</span>
+      </div>
+      <div class="phase-body">
+        <table>
+          <thead><tr><th>Ref</th><th>Task / Milestone</th><th>Target Date</th><th>Start Date</th><th>End Date</th><th>Status</th><th>Owner</th><th>Predecessor</th><th>Notes</th></tr></thead>
+          <tbody id="tbody-${phase.id}"></tbody>
+        </table>
+      </div>`;
+    main.appendChild(sec);
+    const tbody = document.getElementById('tbody-' + phase.id);
+    rows.forEach((r,i) => {
+      const [ref,task,date,status,month,owner,pred,flag,notes,startDate,endDate] = r;
+      const isMile = status==='Milestone';
+      const tr = document.createElement('tr');
+      tr.dataset.status = status; tr.dataset.flag = flag||'';
+      tr.dataset.text = (ref+task+owner+notes).toLowerCase();
+      if(isMile) tr.classList.add('milestone-row');
+      const isDev = phase.id === 'dev';
+      tr.innerHTML = `
+        <td class="ref">${ref}</td>
+        <td class="task${isMile?' is-milestone':''}">${task}</td>
+        <td class="date">${date}</td>
+        <td class="date">${isDev ? '' : startDate}</td>
+        <td class="date">${isDev ? '' : endDate}</td>
+        <td>${statusBadge(status)}</td>
+        <td class="owner">${owner}</td>
+        <td class="pred">${pred}</td>
+        <td class="notes">${notes}</td>`;
+      tbody.appendChild(tr);
+    });
+  });
+
+  // Risk register
+  const riskSec = document.createElement('div');
+  riskSec.className = 'risk-section';
+  riskSec.innerHTML = `
+    <div class="risk-header" onclick="toggleRisk()">
+      <span style="color:#dc2626;font-size:1rem">⚠</span>
+      <span class="risk-header-title">PM Risk Register</span>
+      <span class="risk-header-sub">${RISKS.length} risks identified — immediate action required</span>
+      <span class="phase-chevron" id="riskChevron" style="color:#dc2626;margin-left:0.5rem">▼</span>
+    </div>
+    <div class="risk-body" id="riskBody">
+      <table class="risk-table">
+        <thead><tr><th>ID</th><th>Area</th><th>Issue</th><th>Priority</th><th>Recommended Action</th></tr></thead>
+        <tbody>${RISKS.map((r,i)=>`
+          <tr><td class="risk-id">${r[0]}</td><td class="risk-area">${r[1]}</td><td>${r[2]}</td>
+          <td><span class="${r[3]==='HIGH'?'priority-high':'priority-med'}">${r[3]}</span></td>
+          <td>${r[4]}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  main.appendChild(riskSec);
+
+  // Legend
+  const legend = document.createElement('div');
+  legend.className = 'legend-bar';
+  legend.innerHTML = `
+    <span class="legend-label">Status:</span>
+    ${Object.entries(STATUS_STYLE).map(([k,v])=>`<span class="legend-item"><span class="status-badge" style="background:${v.bg};color:${v.fg};border:1px solid ${v.fg}30">${k}</span></span>`).join('')}`;
+  main.appendChild(legend);
+}
+
+function togglePhase(id) { document.getElementById('phase-'+id).classList.toggle('collapsed'); }
+function toggleRisk() {
+  const body = document.getElementById('riskBody'), chev = document.getElementById('riskChevron');
+  const hidden = body.style.display==='none';
+  body.style.display = hidden ? '' : 'none';
+  chev.style.transform = hidden ? '' : 'rotate(-90deg)';
+}
+function filterStatus(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+function searchTasks(val) { currentSearch = val.toLowerCase(); applyFilters(); }
+function applyFilters() {
+  document.querySelectorAll('tbody tr').forEach(tr => {
+    const matchStatus = currentFilter==='all' || tr.dataset.status===currentFilter || (currentFilter==='⚠ RISK' && tr.dataset.flag==='⚠ RISK');
+    const matchSearch = !currentSearch || tr.dataset.text.includes(currentSearch);
+    tr.classList.toggle('hidden-row', !(matchStatus && matchSearch));
+  });
+  PHASES.forEach(phase => {
+    const tbody = document.getElementById('tbody-'+phase.id);
+    if(!tbody) return;
+    const visible = tbody.querySelectorAll('tr:not(.hidden-row)').length;
+    const countEl = document.querySelector(`#phase-${phase.id} .phase-count`);
+    if(countEl) countEl.textContent = visible+' tasks';
+    const sec = document.getElementById('phase-'+phase.id);
+    if(sec) sec.style.display = visible===0 ? 'none' : '';
+  });
+}
+
+buildStats();
+buildPhases();
+</script>
+</body>
+</html>
